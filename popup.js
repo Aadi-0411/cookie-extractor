@@ -1,34 +1,55 @@
+// popup.js
+
+/**
+ * @fileoverview This script is for the Chrome Extension popup.
+ * @suppress {uselessCode}
+ */
+// @ts-check
+// @ts-ignore
+/// <reference types="chrome" />
+
+// Utility function to fetch cookies for a given domain
+function fetchCookies(domain) {
+    return new Promise(resolve => {
+        chrome.cookies.getAll({ domain: domain }, resolve);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const copyButton = document.getElementById('copyCookies');
     const statusDiv = document.getElementById('status');
 
-    copyButton.addEventListener('click', () => {
-        statusDiv.textContent = 'Fetching...';
+    copyButton.addEventListener('click', async () => { // Changed to async function
+        statusDiv.textContent = 'Fetching cookies from YouTube and Google...';
 
-        // 1. Fetch all cookies for YouTube
-        chrome.cookies.getAll({ domain: "youtube.com" }, (cookies) => {
-            if (!cookies || cookies.length === 0) {
-                statusDiv.textContent = 'Error: No cookies found. Are you logged into YouTube?';
+        try {
+            // 1. Fetch cookies for BOTH domains
+            const youtubeCookies = await fetchCookies("youtube.com");
+            const googleCookies = await fetchCookies("google.com");
+
+            const allCookies = [...youtubeCookies, ...googleCookies];
+
+            if (allCookies.length === 0) {
+                statusDiv.textContent = 'Error: No cookies found. Are you logged into YouTube/Google?';
                 return;
             }
 
-            try {
-                // 2. Stringify the cookies into the JSON format expected by your server
-                const jsonCookies = JSON.stringify(cookies, null, 2);
+            // 2. Stringify the combined array
+            const jsonCookies = JSON.stringify(allCookies, null, 2);
 
-                // 3. Write the JSON string to the user's clipboard
-                navigator.clipboard.writeText(jsonCookies).then(() => {
-                    statusDiv.textContent = '✅ Cookies copied to clipboard!';
-                    statusDiv.style.color = '#00ff00';
-                    setTimeout(() => { window.close(); }, 1500); // Close the popup after success
-                }).catch(err => {
-                    statusDiv.textContent = `Error copying: ${err.message}`;
-                    statusDiv.style.color = '#ff0000';
-                });
+            // 3. Write to the user's clipboard
+            navigator.clipboard.writeText(jsonCookies).then(() => {
+                statusDiv.textContent = `✅ ${allCookies.length} cookies copied to clipboard! Paste into Detoxify.`;
+                statusDiv.style.color = '#00ff00';
+                setTimeout(() => { window.close(); }, 2500);
+            }).catch(err => {
+                statusDiv.textContent = `Error copying to clipboard: ${err.message}`;
+                statusDiv.style.color = '#ff0000';
+            });
 
-            } catch (e) {
-                statusDiv.textContent = `Processing error: ${e.message}`;
-            }
-        });
+        } catch (e) {
+            statusDiv.textContent = `Processing error: ${e.message}`;
+            statusDiv.style.color = '#ff0000';
+        }
     });
 });

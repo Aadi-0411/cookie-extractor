@@ -2,20 +2,18 @@
   "manifest_version": 3,
   "name": "Detoxify Cookie Exporter",
   "version": "1.0",
-  "description": "One-click export of YouTube session cookies for the Detoxify app.",
+  "description": "One-click export of YouTube and Google session cookies for the Detoxify app.",
   "permissions": [
     "cookies",
     "activeTab",
-    "clipboardWrite" // Required for writing to the clipboard
+    "clipboardWrite"
   ],
+
   "host_permissions": [
-    "*://*.youtube.com/*" // Only grant access to YouTube cookies
+    "*://*.youtube.com/*",
+    "*://*.google.com/*"
   ],
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icon16.png",
-      "48": "icon48.png"
-    }
+    "default_popup": "popup.html"
   }
 }
